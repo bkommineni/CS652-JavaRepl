@@ -1,23 +1,136 @@
 package cs652.repl;
 
+import com.sun.source.util.JavacTask;
+
+import javax.tools.*;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.*;
+import java.util.Arrays;
 
 public class JavaREPL {
+
 	public static void main(String[] args) throws IOException {
-		exec(new InputStreamReader(System.in));
+
+			exec(new InputStreamReader(System.in));
 	}
 
 	public static void exec(Reader r) throws IOException {
 		BufferedReader stdin = new BufferedReader(r);
 		NestedReader reader = new NestedReader(stdin);
 		int classNumber = 0;
-		while (true) {
-			System.out.print("> ");
-			String java = reader.getNestedString();
-			System.out.println(java);
-			// TODO
+		String className = "Interp_";
+		try {
+			while (true) {
+				System.out.print("> ");
+				String java = reader.getNestedString();
+				System.out.println(java);
+				// TODO
+				boolean declarnCheck = isDeclaration(java);
+
+				if (classNumber == 0) {
+					String classNum = Integer.toString(classNumber);
+					if (declarnCheck) {
+						String content = getCode(className + classNum, null, java, null);
+						writeFile("tmp", className + classNum, content);
+					} else {
+						String content = getCode(className + classNum, null, null, java);
+						writeFile("tmp", className + classNum, content);
+					}
+				} else {
+					String classNum = Integer.toString(classNumber);
+					String superClassNum = Integer.toString(classNumber - 1);
+					if (declarnCheck) {
+						String content = getCode(className + classNum, className + superClassNum, java, null);
+						writeFile("tmp", className + classNum, content);
+					} else {
+						String content = getCode(className + classNum, className + superClassNum, null, java);
+						writeFile("tmp", className + classNum, content);
+					}
+				}
+				classNumber = classNumber + 1;
+			}
 		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+	public static String getCode(String className, String extendSuper, String def, String stat)
+	{
+		StringBuilder builder = new StringBuilder();
+
+		builder.append("import java.io.*;"+"\n");
+		builder.append("import java.util.*;"+"\n");
+
+		if(extendSuper == null)
+		{
+			builder.append("public class "+ className);
+			builder.append(" {\n");
+			if(def != null)
+			{
+				builder.append("public static " + def+"\n");
+				builder.append("public static void exec()");
+				builder.append("{\n");
+				builder.append("}\n");
+			}
+			else if(stat != null)
+			{
+				builder.append("public static void exec()");
+				builder.append(" {\n");
+				builder.append("public static " + stat+"\n");
+				builder.append("}\n");
+			}
+			builder.append("}");
+		}
+		else
+		{
+			builder.append("public class "+ className);
+			builder.append(" extends "+extendSuper);
+			builder.append(" {\n");
+			if(def != null)
+			{
+				builder.append("public static " + def +"\n");
+				builder.append("public static void exec()");
+				builder.append("{\n");
+				builder.append("}\n");
+			}
+			else if(stat != null)
+			{
+				builder.append("public static void exec()");
+				builder.append(" {\n");
+				builder.append("public static " + stat +"\n");
+				builder.append("}\n");
+			}
+			builder.append("}");
+		}
+
+		return builder.toString();
+	}
+
+	public static void writeFile(String dir, String fileName, String content) throws Exception
+	{
+		PrintWriter writer = new PrintWriter(dir + "/" + fileName+".java","UTF-8");
+		writer.print(content);
+		writer.flush();
+		writer.close();
+	}
+
+	public static boolean isDeclaration(String line) throws Exception
+	{
+		String content = getCode("Bogus",null,line,null);
+		writeFile("tmp","Bogus",content);
+
+		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+		DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
+		StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null, null);
+		Iterable<? extends JavaFileObject> compilationUnits = fileManager
+				.getJavaFileObjectsFromStrings(Arrays.asList("tmp/Bogus.java"));
+		JavacTask task = (JavacTask) compiler.getTask(null, fileManager, diagnostics, null,
+				null, compilationUnits);
+		task.parse();
+		fileManager.close();
+		return diagnostics.getDiagnostics().size() == 0;
 	}
 }
