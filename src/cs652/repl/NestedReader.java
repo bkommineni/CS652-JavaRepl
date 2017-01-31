@@ -22,85 +22,92 @@ public class NestedReader {
         c = 0;
 
         while (true) {
-            char check = (char) c;
+            if(c != -1) {
+                char check = (char) c;
 
-            switch (check) {
-                case '{':
-                    nestedChars.push('}');
-                    consume();
-                    break;
-                case '[':
-                    nestedChars.push(']');
-                    consume();
-                    break;
-                case '(':
-                    nestedChars.push(')');
-                    consume();
-                    break;
-                case '}':
-                    if (nestedChars.pop() != '}') {
-                        String returnStr = buf.toString();
-                        buf = new StringBuilder();
-                        return returnStr;
-                    }
-                    else
+                switch (check) {
+                    case '{':
+                        nestedChars.push('}');
                         consume();
-                    break;
-                case ']':
-                    if (nestedChars.pop() != ']') {
-                        String returnStr = buf.toString();
-                        buf = new StringBuilder();
-                        return returnStr;
-                    }
-                    else
+                        break;
+                    case '[':
+                        nestedChars.push(']');
                         consume();
-                    break;
-                case ')':
-                    if (nestedChars.pop() != ')') {
-                        String returnStr = buf.toString();
-                        buf = new StringBuilder();
-                        return returnStr;
-                    }
-                    else
+                        break;
+                    case '(':
+                        nestedChars.push(')');
                         consume();
-                    break;
-                case '\n':
-                    if (nestedChars.empty()) {
-                        String returnStr = buf.toString();
-                        buf = new StringBuilder();
-                        return returnStr;
-                    }
-                    else
-                        consume();
-                    break;
-                case '/':
-                    int nextChar = input.read();
-                    if(nextChar == '/')
-                    {
-                        int ch ;
-                        StringBuilder builder = new StringBuilder();
-                        while ((c = input.read()) != '\n')
-                        {
-                            builder.append((char)c);
+                        break;
+                    case '}':
+                        if(!nestedChars.empty()) {
+                            if (nestedChars.pop() != '}') {
+                                String returnStr = buf.toString();
+                                buf = new StringBuilder();
+                                return returnStr;
+                            } else
+                                consume();
                         }
-                        if(nestedChars.empty())
-                        {
+                        else
+                            consume();
+                        break;
+                    case ']':
+                        if(!nestedChars.empty()) {
+                            if (nestedChars.pop() != ']') {
+                                String returnStr = buf.toString();
+                                buf = new StringBuilder();
+                                return returnStr;
+                            } else
+                                consume();
+                        }
+                        else
+                            consume();
+                        break;
+                    case ')':
+                        if(!nestedChars.empty()) {
+                            if (nestedChars.pop() != ')') {
+                                String returnStr = buf.toString();
+                                buf = new StringBuilder();
+                                return returnStr;
+                            } else
+                                consume();
+                        }
+                        else
+                            consume();
+                        break;
+                    case '\n':
+                        if (nestedChars.empty()) {
                             String returnStr = buf.toString();
                             buf = new StringBuilder();
                             return returnStr;
+                        } else
+                            consume();
+                        break;
+                    case '/':
+                        int nextChar = input.read();
+                        if (nextChar == '/') {
+                            int ch;
+                            StringBuilder builder = new StringBuilder();
+                            while ((c = input.read()) != '\n') {
+                                builder.append((char) c);
+                            }
+                            if (nestedChars.empty()) {
+                                String returnStr = buf.toString();
+                                buf = new StringBuilder();
+                                return returnStr;
+                            } else
+                                consume();
+                        } else {
+                            buf.append(nextChar);
+                            consume();
                         }
-                        else
+                        break;
+                    default:
                         consume();
-                    }
-                    else {
-                        buf.append(nextChar);
-                        consume();
-                    }
-                    break;
-                default:
-                    consume();
-                    break;
+                        break;
+                }
             }
+            else
+                return null;
         }
     }
     void consume() throws IOException {

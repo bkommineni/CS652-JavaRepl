@@ -35,46 +35,55 @@ public class JavaREPL {
 			while (true) {
 				System.out.print("> ");
 				String java = reader.getNestedString();
+				if (java != null) {
+					boolean declarnCheck = isDeclaration(java);
 
-				boolean declarnCheck = isDeclaration(java);
+					if (classNumber == 0) {
+						String classNum = Integer.toString(classNumber);
+						if (declarnCheck) {
+							String content = getCode(className + classNum, null, java, null);
+							writeFile("tmp", className + classNum, content);
+							String errormsg = compile(className + classNum);
+							if (errormsg == null)
+								exec(loader, className + classNum, "exec");
+							else
+								System.err.println(errormsg);
 
-				if (classNumber == 0) {
-					String classNum = Integer.toString(classNumber);
-					if (declarnCheck) {
-						String content = getCode(className + classNum, null, java, null);
-						writeFile("tmp", className + classNum, content);
-						compile(className + classNum);
+						} else {
+							String content = getCode(className + classNum, null, null, java);
+							writeFile("tmp", className + classNum, content);
+							String errormsg = compile(className + classNum);
+							if (errormsg == null)
+								exec(loader, className + classNum, "exec");
+							else
+								System.err.println(errormsg);
 
-						exec(loader, className + classNum, "exec");
-
+						}
+					} else {
+						String classNum = Integer.toString(classNumber);
+						String superClassNum = Integer.toString(classNumber - 1);
+						if (declarnCheck) {
+							String content = getCode(className + classNum, className + superClassNum, java, null);
+							writeFile("tmp", className + classNum, content);
+							String errormsg = compile(className + classNum);
+							if (errormsg == null)
+								exec(loader, className + classNum, "exec");
+							else
+								System.err.println(errormsg);
+						} else {
+							String content = getCode(className + classNum, className + superClassNum, null, java);
+							writeFile("tmp", className + classNum, content);
+							String errormsg = compile(className + classNum);
+							if (errormsg == null)
+								exec(loader, className + classNum, "exec");
+							else
+								System.err.println(errormsg);
+						}
 					}
-					else {
-						String content = getCode(className + classNum, null, null, java);
-						writeFile("tmp", className + classNum, content);
-						compile(className + classNum);
-
-						exec(loader, className + classNum, "exec");
-
-					}
-				} else {
-					String classNum = Integer.toString(classNumber);
-					String superClassNum = Integer.toString(classNumber - 1);
-					if (declarnCheck) {
-						String content = getCode(className + classNum, className + superClassNum, java, null);
-						writeFile("tmp", className + classNum, content);
-						compile(className + classNum);
-
-						exec(loader,className + classNum,"exec");
-					}
-					else {
-						String content = getCode(className + classNum, className + superClassNum, null, java);
-						writeFile("tmp", className + classNum, content);
-						boolean successCheck = compile(className + classNum);
-
-						exec(loader,className + classNum,"exec");
-					}
+					classNumber = classNumber + 1;
 				}
-				classNumber = classNumber + 1;
+				else
+					break;
 			}
 		}
 		catch (Exception e)
@@ -160,7 +169,7 @@ public class JavaREPL {
 		return diagnostics.getDiagnostics().size() == 0;
 	}
 
-	public static boolean compile(String fileName) throws IOException
+	public static String compile(String fileName) throws IOException
 	{
 		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
@@ -174,15 +183,17 @@ public class JavaREPL {
 		JavacTask task = (JavacTask) compiler.getTask(null, fileManager, diagnostics,
                 optionList,null, compilationUnits);
 		boolean success = task.call();
+		String errormsg = null;
 		if (!success) {
 			List<Diagnostic<? extends JavaFileObject>> diagnosticsErrors = diagnostics.getDiagnostics();
 			for (Diagnostic<? extends JavaFileObject> diagnosticError : diagnosticsErrors) {
 				// read error details from the diagnostic object
-				System.err.println(diagnosticError.getMessage(null));
+				errormsg = errormsg + "line "+diagnosticError.getLineNumber() + ": "
+						+diagnosticError.getMessage(null)+"\n";
 			}
 		}
 		fileManager.close();
-		return success;
+		return errormsg;
 	}
 
 	public static void createTempDirectory() throws IOException
