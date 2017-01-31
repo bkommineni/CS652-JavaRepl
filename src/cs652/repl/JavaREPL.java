@@ -35,7 +35,6 @@ public class JavaREPL {
 			while (true) {
 				System.out.print("> ");
 				String java = reader.getNestedString();
-				System.out.println(java);
 
 				boolean declarnCheck = isDeclaration(java);
 
@@ -45,13 +44,17 @@ public class JavaREPL {
 						String content = getCode(className + classNum, null, java, null);
 						writeFile("tmp", className + classNum, content);
 						compile(className + classNum);
-						exec(loader,className + classNum,"exec");
+
+						exec(loader, className + classNum, "exec");
+
 					}
 					else {
 						String content = getCode(className + classNum, null, null, java);
 						writeFile("tmp", className + classNum, content);
 						compile(className + classNum);
-						exec(loader,className + classNum,"exec");
+
+						exec(loader, className + classNum, "exec");
+
 					}
 				} else {
 					String classNum = Integer.toString(classNumber);
@@ -60,12 +63,14 @@ public class JavaREPL {
 						String content = getCode(className + classNum, className + superClassNum, java, null);
 						writeFile("tmp", className + classNum, content);
 						compile(className + classNum);
+
 						exec(loader,className + classNum,"exec");
 					}
 					else {
 						String content = getCode(className + classNum, className + superClassNum, null, java);
 						writeFile("tmp", className + classNum, content);
-						compile(className + classNum);
+						boolean successCheck = compile(className + classNum);
+
 						exec(loader,className + classNum,"exec");
 					}
 				}
@@ -155,7 +160,7 @@ public class JavaREPL {
 		return diagnostics.getDiagnostics().size() == 0;
 	}
 
-	public static void compile(String fileName) throws IOException
+	public static boolean compile(String fileName) throws IOException
 	{
 		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
@@ -168,8 +173,16 @@ public class JavaREPL {
                 ":tmp"));
 		JavacTask task = (JavacTask) compiler.getTask(null, fileManager, diagnostics,
                 optionList,null, compilationUnits);
-		task.call();
+		boolean success = task.call();
+		if (!success) {
+			List<Diagnostic<? extends JavaFileObject>> diagnosticsErrors = diagnostics.getDiagnostics();
+			for (Diagnostic<? extends JavaFileObject> diagnosticError : diagnosticsErrors) {
+				// read error details from the diagnostic object
+				System.err.println(diagnosticError.getMessage(null));
+			}
+		}
 		fileManager.close();
+		return success;
 	}
 
 	public static void createTempDirectory() throws IOException
@@ -182,6 +195,7 @@ public class JavaREPL {
 
 	public static void exec(ClassLoader loader, String className, String methodName) throws Exception
 	{
+		//Class cl = Class.forName(className,true,loader);
         Class cl = loader.loadClass(className);
 		Method method = cl.getMethod(methodName);
 		method.invoke(null);

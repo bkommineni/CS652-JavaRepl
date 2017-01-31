@@ -77,19 +77,23 @@ public class NestedReader {
                     int nextChar = input.read();
                     if(nextChar == '/')
                     {
-                        int c ;
+                        int ch ;
                         StringBuilder builder = new StringBuilder();
                         while ((c = input.read()) != '\n')
                         {
                             builder.append((char)c);
                         }
-                        String returnStr = buf.toString();
-                        buf = new StringBuilder();
-                        return returnStr;
+                        if(nestedChars.empty())
+                        {
+                            String returnStr = buf.toString();
+                            buf = new StringBuilder();
+                            return returnStr;
+                        }
+                        else
+                        consume();
                     }
                     else {
-                        buf.append('/');
-                        c = nextChar;
+                        buf.append(nextChar);
                         consume();
                     }
                     break;
