@@ -183,17 +183,20 @@ public class JavaREPL {
 		JavacTask task = (JavacTask) compiler.getTask(null, fileManager, diagnostics,
                 optionList,null, compilationUnits);
 		boolean success = task.call();
-		String errormsg = null;
+		StringBuilder errormsg = new StringBuilder();
 		if (!success) {
 			List<Diagnostic<? extends JavaFileObject>> diagnosticsErrors = diagnostics.getDiagnostics();
 			for (Diagnostic<? extends JavaFileObject> diagnosticError : diagnosticsErrors) {
 				// read error details from the diagnostic object
-				errormsg = errormsg + "line "+diagnosticError.getLineNumber() + ": "
-						+diagnosticError.getMessage(null)+"\n";
+				errormsg.append("line ");
+				errormsg.append(diagnosticError.getLineNumber());
+				errormsg.append(": ");
+				errormsg.append(diagnosticError.getMessage(null));
+				errormsg.append("\n");
 			}
 		}
 		fileManager.close();
-		return errormsg;
+		return errormsg.toString();
 	}
 
 	public static void createTempDirectory() throws IOException
