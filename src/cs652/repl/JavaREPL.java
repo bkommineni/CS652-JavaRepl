@@ -6,7 +6,12 @@ import javax.tools.*;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.*;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class JavaREPL {
 
@@ -20,12 +25,18 @@ public class JavaREPL {
 		NestedReader reader = new NestedReader(stdin);
 		int classNumber = 0;
 		String className = "Interp_";
-		try {
+		createTempDirectory();
+        URL tmpURL = new File("tmp").toURI().toURL();
+        ClassLoader loader = new URLClassLoader(new URL[]{tmpURL});
+
+
+		try
+		{
 			while (true) {
 				System.out.print("> ");
 				String java = reader.getNestedString();
 				System.out.println(java);
-				// TODO
+
 				boolean declarnCheck = isDeclaration(java);
 
 				if (classNumber == 0) {
@@ -33,9 +44,14 @@ public class JavaREPL {
 					if (declarnCheck) {
 						String content = getCode(className + classNum, null, java, null);
 						writeFile("tmp", className + classNum, content);
-					} else {
+						compile(className + classNum);
+						exec(loader,className + classNum,"exec");
+					}
+					else {
 						String content = getCode(className + classNum, null, null, java);
 						writeFile("tmp", className + classNum, content);
+						compile(className + classNum);
+						exec(loader,className + classNum,"exec");
 					}
 				} else {
 					String classNum = Integer.toString(classNumber);
@@ -43,9 +59,14 @@ public class JavaREPL {
 					if (declarnCheck) {
 						String content = getCode(className + classNum, className + superClassNum, java, null);
 						writeFile("tmp", className + classNum, content);
-					} else {
+						compile(className + classNum);
+						exec(loader,className + classNum,"exec");
+					}
+					else {
 						String content = getCode(className + classNum, className + superClassNum, null, java);
 						writeFile("tmp", className + classNum, content);
+						compile(className + classNum);
+						exec(loader,className + classNum,"exec");
 					}
 				}
 				classNumber = classNumber + 1;
@@ -79,7 +100,7 @@ public class JavaREPL {
 			{
 				builder.append("public static void exec()");
 				builder.append(" {\n");
-				builder.append("public static " + stat+"\n");
+				builder.append(stat+"\n");
 				builder.append("}\n");
 			}
 			builder.append("}");
@@ -100,7 +121,7 @@ public class JavaREPL {
 			{
 				builder.append("public static void exec()");
 				builder.append(" {\n");
-				builder.append("public static " + stat +"\n");
+				builder.append(stat +"\n");
 				builder.append("}\n");
 			}
 			builder.append("}");
@@ -132,5 +153,37 @@ public class JavaREPL {
 		task.parse();
 		fileManager.close();
 		return diagnostics.getDiagnostics().size() == 0;
+	}
+
+	public static void compile(String fileName) throws IOException
+	{
+		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+
+		DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
+		StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null, null);
+		Iterable<? extends JavaFileObject> compilationUnits = fileManager
+				.getJavaFileObjectsFromStrings(Arrays.asList("tmp/" + fileName + ".java"));
+        List<String> optionList = new ArrayList<String>();
+        optionList.addAll(Arrays.asList("-classpath",System.getProperty("java.class.path")+
+                ":tmp"));
+		JavacTask task = (JavacTask) compiler.getTask(null, fileManager, diagnostics,
+                optionList,null, compilationUnits);
+		task.call();
+		fileManager.close();
+	}
+
+	public static void createTempDirectory() throws IOException
+	{
+		File dir = new File("tmp");
+
+		if(!dir.exists())
+			dir.mkdir();
+	}
+
+	public static void exec(ClassLoader loader, String className, String methodName) throws Exception
+	{
+        Class cl = loader.loadClass(className);
+		Method method = cl.getMethod(methodName);
+		method.invoke(null);
 	}
 }
