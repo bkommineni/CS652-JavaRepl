@@ -14,8 +14,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class JavaREPL {
 
@@ -30,7 +28,6 @@ public class JavaREPL {
 		NestedReader reader = new NestedReader(stdin);
 		int classNumber = 0;
 		String className = "Interp_";
-		//createTempDirectory();
         URL tmpURL = new File(tmpDirPath).toURI().toURL();
         ClassLoader loader = new URLClassLoader(new URL[]{tmpURL});
 
@@ -41,30 +38,26 @@ public class JavaREPL {
 				System.out.print("> ");
 				String java = reader.getNestedString();
 
-				/*if((java != null) && java.startsWith("print"))
+				if((java != null) && java.startsWith("print "))
 				{
-					Pattern regex = Pattern.compile("((print) ((.)*);?)");
-					Matcher match = regex.matcher(java);
-					//if(match.find()) {
-						StringBuffer str = new StringBuffer();
-						str.append("System.out.println");
-						str.append("(");
-						str.append(match.group(3));
-						str.append(")");
-						str.append(match.group(4));
-						java = str.toString();
-					//}
-				}*/
-				if((java != null) && java.startsWith("print"))
-				{
-					String[] tokens = java.split("[ ;]");
 					StringBuffer str = new StringBuffer();
+
+					String expr = java.substring(6);
+					int expLen = expr.length();
 					str.append("System.out.println");
 					str.append("(");
-					str.append(tokens[1]);
-					str.append(")");
-					if(java.endsWith(";"))
+					if(expr.endsWith(";"))
+					{
+						str.append(expr.substring(0,expLen-1));
+						str.append(")");
 						str.append(";");
+					}
+					else
+					{
+						str.append(expr);
+						str.append(")");
+					}
+
 					java = str.toString();
 				}
 

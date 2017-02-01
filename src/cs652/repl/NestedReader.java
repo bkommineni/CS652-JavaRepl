@@ -41,6 +41,10 @@ public class NestedReader {
                     case '}':
                         if(!nestedChars.empty()) {
                             if (nestedChars.pop() != '}') {
+                                buf.append((char) c);
+                                while ((c = input.read()) != '\n') {
+                                    buf.append((char) c);
+                                }
                                 String returnStr = buf.toString();
                                 buf = new StringBuilder();
                                 return returnStr;
@@ -53,6 +57,10 @@ public class NestedReader {
                     case ']':
                         if(!nestedChars.empty()) {
                             if (nestedChars.pop() != ']') {
+                                buf.append((char) c);
+                                while ((c = input.read()) != '\n') {
+                                    buf.append((char) c);
+                                }
                                 String returnStr = buf.toString();
                                 buf = new StringBuilder();
                                 return returnStr;
@@ -65,6 +73,10 @@ public class NestedReader {
                     case ')':
                         if(!nestedChars.empty()) {
                             if (nestedChars.pop() != ')') {
+                                buf.append((char) c);
+                                while ((c = input.read()) != '\n') {
+                                    buf.append((char) c);
+                                }
                                 String returnStr = buf.toString();
                                 buf = new StringBuilder();
                                 return returnStr;
