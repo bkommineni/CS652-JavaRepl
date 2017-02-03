@@ -5,27 +5,49 @@ import java.io.IOException;
 import java.util.Stack;
 
 /**
- * Created by bharu on 1/26/17.
+ * NestedReader class to handle the input statements
+ * having nested parentheses,braces,brackets,and ignoring the
+ * input after comments symbol from java and handling end of file and
+ * line terminator characters.
+ * Starter code for this class is taken from the documentation of this project
+ * provided by Prof.Terrence Parr
+ * @bhargavi
  */
 public class NestedReader {
 
-    StringBuilder buf = new StringBuilder();
-    BufferedReader input;
-    int c;
+    private StringBuilder buf = new StringBuilder();
+    private BufferedReader input;
+    private int c;
 
+    /**
+     * Method which gets the standard input from console from
+     * JavaREPL class to process and accept the nested strings
+     * with parentheses etc.
+     * @param input input string
+     */
     public NestedReader(BufferedReader input) {
         this.input = input;
     }
+
+    /**
+     * Method which handles the input processing based on the
+     * input characters.
+     * @return returns the processed input string based on requirements.
+     * @throws IOException
+     */
     public String getNestedString() throws IOException {
 
         Stack<Character> nestedChars = new Stack();
         c = 0;
 
-        while (true) {
-            if(c != -1) {
+        while (true)
+        {
+            if(c != -1)
+            {
                 char check = (char) c;
 
-                switch (check) {
+                switch (check)
+                {
                     case '{':
                         nestedChars.push('}');
                         consume();
@@ -39,8 +61,10 @@ public class NestedReader {
                         consume();
                         break;
                     case '}':
-                        if(!nestedChars.empty()) {
-                            if (nestedChars.pop() != '}') {
+                        if(!nestedChars.empty())
+                        {
+                            if (nestedChars.pop() != '}')
+                            {
                                 buf.append((char) c);
                                 while ((c = input.read()) != '\n') {
                                     buf.append((char) c);
@@ -48,67 +72,83 @@ public class NestedReader {
                                 String returnStr = buf.toString();
                                 buf = new StringBuilder();
                                 return returnStr;
-                            } else
+                            }
+                            else
                                 consume();
                         }
                         else
                             consume();
                         break;
                     case ']':
-                        if(!nestedChars.empty()) {
-                            if (nestedChars.pop() != ']') {
+                        if(!nestedChars.empty())
+                        {
+                            if (nestedChars.pop() != ']')
+                            {
                                 buf.append((char) c);
-                                while ((c = input.read()) != '\n') {
+                                while ((c = input.read()) != '\n')
+                                {
                                     buf.append((char) c);
                                 }
                                 String returnStr = buf.toString();
                                 buf = new StringBuilder();
                                 return returnStr;
-                            } else
+                            }
+                            else
                                 consume();
                         }
                         else
                             consume();
                         break;
                     case ')':
-                        if(!nestedChars.empty()) {
-                            if (nestedChars.pop() != ')') {
+                        if(!nestedChars.empty())
+                        {
+                            if (nestedChars.pop() != ')')
+                            {
                                 buf.append((char) c);
-                                while ((c = input.read()) != '\n') {
+                                while ((c = input.read()) != '\n')
+                                {
                                     buf.append((char) c);
                                 }
                                 String returnStr = buf.toString();
                                 buf = new StringBuilder();
                                 return returnStr;
-                            } else
+                            }
+                            else
                                 consume();
                         }
                         else
                             consume();
                         break;
                     case '\n':
-                        if (nestedChars.empty()) {
+                        if (nestedChars.empty())
+                        {
                             String returnStr = buf.toString();
                             buf = new StringBuilder();
                             return returnStr;
-                        } else
+                        }
+                        else
                             consume();
                         break;
                     case '/':
                         int nextChar = input.read();
-                        if (nextChar == '/') {
-                            int ch;
+                        if (nextChar == '/')
+                        {
                             StringBuilder builder = new StringBuilder();
-                            while ((c = input.read()) != '\n') {
+                            while ((c = input.read()) != '\n')
+                            {
                                 builder.append((char) c);
                             }
-                            if (nestedChars.empty()) {
+                            if (nestedChars.empty())
+                            {
                                 String returnStr = buf.toString();
                                 buf = new StringBuilder();
                                 return returnStr;
-                            } else
+                            }
+                            else
                                 consume();
-                        } else {
+                        }
+                        else
+                        {
                             buf.append(nextChar);
                             consume();
                         }
@@ -122,7 +162,7 @@ public class NestedReader {
                 return null;
         }
     }
-    void consume() throws IOException {
+    private void consume() throws IOException {
 
         if(c == 0)
         {
