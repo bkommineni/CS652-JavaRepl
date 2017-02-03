@@ -119,6 +119,22 @@ public class NestedReader {
                         else
                             consume();
                         break;
+                    case '\"':
+                        buf.append((char) c);
+                        while ((c = input.read()) != '\"')
+                        {
+                            buf.append((char) c);
+                        }
+                        consume();
+                        break;
+                    case '\'':
+                        buf.append((char) c);
+                        while ((c = input.read()) != '\'')
+                        {
+                            buf.append((char) c);
+                        }
+                        consume();
+                        break;
                     case '\n':
                         if (nestedChars.empty())
                         {
