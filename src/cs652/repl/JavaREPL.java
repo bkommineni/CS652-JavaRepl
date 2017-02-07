@@ -163,6 +163,7 @@ public class JavaREPL {
 									  String input, boolean isBaseClass,boolean isChildClass,
 									  boolean isDeclrn,boolean isStmt) throws Exception
 	{
+		// There is way too much cut-and-paste here. You should be able to factor this out into a single call to getCode and one to write()
 		if(isDeclrn && isBaseClass)
 		{
 			String content = getCode(className, superClassName, input, null);
