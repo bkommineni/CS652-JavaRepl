@@ -77,13 +77,13 @@ public class JavaREPL {
 						{
 							boolean isStmt = false;
 							getCode_WriteToFile_Compile_Execute(tmpDirPath,loader,className,null,input,
-									true,false,isDeclrn,isStmt);
+									isDeclrn,isStmt);
 						}
 						else
 						{
 							boolean isStmt = true;
 							getCode_WriteToFile_Compile_Execute(tmpDirPath,loader,className,null,input,
-									true,false,isDeclrn,isStmt);
+									isDeclrn,isStmt);
 						}
 					}
 					else
@@ -96,13 +96,13 @@ public class JavaREPL {
 						{
 							boolean isStmt = false;
 							getCode_WriteToFile_Compile_Execute(tmpDirPath,loader,className,superClassName,input,
-									true,false,isDeclrn,isStmt);
+									isDeclrn,isStmt);
 						}
 						else
 						{
 							boolean isStmt = true;
 							getCode_WriteToFile_Compile_Execute(tmpDirPath,loader,className,superClassName,input,
-									true,false,isDeclrn,isStmt);
+									isDeclrn,isStmt);
 						}
 					}
 					classNumber = classNumber + 1;
@@ -153,57 +153,21 @@ public class JavaREPL {
 	 * @param className className
 	 * @param superClassName superClassName
 	 * @param input inputString
-	 * @param isBaseClass true if it is Base Class or false
-	 * @param isChildClass true if it is Child Class or false
 	 * @param isDeclrn true if it is declaration or false
 	 * @param isStmt true if it is statement or false
 	 * @throws Exception
 	 */
 	private static void getCode_WriteToFile_Compile_Execute(String tmpDirPath,ClassLoader loader,String className,String superClassName,
-									  String input, boolean isBaseClass,boolean isChildClass,
-									  boolean isDeclrn,boolean isStmt) throws Exception
+									  String input,boolean isDeclrn,boolean isStmt) throws Exception
 	{
 		// There is way too much cut-and-paste here. You should be able to factor this out into a single call to getCode and one to write()
-		if(isDeclrn && isBaseClass)
-		{
-			String content = getCode(className, superClassName, input, null);
-			writeFile(tmpDirPath, className, content);
-			String errorMsg = compile(tmpDirPath, className);
-			if (errorMsg.equals(""))
-				exec(loader, className, "exec");
-			else
-				System.err.println(errorMsg);
-		}
-		else if(isDeclrn && isChildClass)
-		{
-			String content = getCode(className, superClassName, input, null);
-			writeFile(tmpDirPath, className, content);
-			String errorMsg = compile(tmpDirPath,className);
-			if (errorMsg.equals(""))
-				exec(loader, className, "exec");
-			else
-				System.err.println(errorMsg);
-		}
-		else if(isStmt && isBaseClass)
-		{
-			String content = getCode(className, superClassName, null, input);
-			writeFile(tmpDirPath, className, content);
-			String errorMsg = compile(tmpDirPath,className);
-			if (errorMsg.equals(""))
-				exec(loader, className, "exec");
-			else
-				System.err.println(errorMsg);
-		}
-		else if(isStmt && isChildClass)
-		{
-			String content = getCode(className, superClassName, null, input);
-			writeFile(tmpDirPath, className, content);
-			String errorMsg = compile(tmpDirPath,className);
-			if (errorMsg.equals(""))
-				exec(loader, className, "exec");
-			else
-				System.err.println(errorMsg);
-		}
+		String content = getCode(className,superClassName,input,isDeclrn,isStmt);
+		writeFile(tmpDirPath, className, content);
+		String errorMsg = compile(tmpDirPath, className);
+		if (errorMsg.equals(""))
+			exec(loader, className, "exec");
+		else
+			System.err.println(errorMsg);
 	}
 
 	/**
@@ -215,7 +179,7 @@ public class JavaREPL {
 	 * @param stat input as a statement
 	 * @return java code including input statement
 	 */
-	private static String getCode(String className, String extendSuper, String def, String stat)
+	private static String getCode(String className, String extendSuper,String input, boolean def, boolean stat)
 	{
 		StringBuilder builder = new StringBuilder();
 
@@ -227,18 +191,18 @@ public class JavaREPL {
 		{
 			builder.append("public class "+ className);
 			builder.append(" {\n");
-			if(def != null)
+			if(def)
 			{
-				builder.append("public static " + def+"\n");
+				builder.append("public static " + input+"\n");
 				builder.append("public static void exec()");
 				builder.append("{\n");
 				builder.append("}\n");
 			}
-			else if(stat != null)
+			else if(stat)
 			{
 				builder.append("public static void exec()");
 				builder.append(" {\n");
-				builder.append(stat+"\n");
+				builder.append(input+"\n");
 				builder.append("}\n");
 			}
 			builder.append("}");
@@ -248,18 +212,18 @@ public class JavaREPL {
 			builder.append("public class "+ className);
 			builder.append(" extends "+extendSuper);
 			builder.append(" {\n");
-			if(def != null)
+			if(def)
 			{
-				builder.append("public static " + def +"\n");
+				builder.append("public static " + input +"\n");
 				builder.append("public static void exec()");
 				builder.append("{\n");
 				builder.append("}\n");
 			}
-			else if(stat != null)
+			else if(stat)
 			{
 				builder.append("public static void exec()");
 				builder.append(" {\n");
-				builder.append(stat +"\n");
+				builder.append(input +"\n");
 				builder.append("}\n");
 			}
 			builder.append("}");
@@ -295,7 +259,7 @@ public class JavaREPL {
 	 */
 	private static boolean isDeclaration(String dir,String line) throws Exception
 	{
-		String content = getCode("Bogus",null,line,null);
+		String content = getCode("Bogus",null,line,true,false);
 		writeFile(dir,"Bogus",content);
 
 		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
